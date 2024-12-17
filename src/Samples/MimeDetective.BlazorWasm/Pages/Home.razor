@@ -1,0 +1,61 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using MimeDetective
+@using MimeDetective.Definitions
+@using MimeDetective.Engine
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+@page "/"
+
+<PageTitle>Detect mime mime type OnChange files</PageTitle>
+
+
+
+<div style="padding:20px; background-color: gray">
+    Detect mime types<br>
+    <InputFile OnChange="@LoadFiles"/>
+</div>
+
+@if(Result != null)
+{
+    <h3>Result</h3>
+    <pre>@Result</pre>
+}
+else
+{
+    <h3>No result (yet,) Try uploading files</h3>
+}
+
+
+@code {
+    private MimeDetective.IContentInspector _inspector = new ContentInspectorBuilder
+        {
+            Definitions =
+        DefaultDefinitions.All()
+        }.Build();
+
+    private string? Result { get; set; }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+
+        foreach (var file in e.GetMultipleFiles(30))
+        {
+            using var mStream = new MemoryStream();
+            await file.OpenReadStream(10000000).CopyToAsync(mStream);
+            mStream.Seek(0, SeekOrigin.Begin);
+            var result = _inspector.Inspect(mStream);
+
+            Result = JsonSerializer.Serialize(result.Select(x => new { x.Definition, x.Type, x.Points, x.Percentage }), new
+            JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Converters =
+{
+new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+}
+                });
+
+        }
+    }
+}
