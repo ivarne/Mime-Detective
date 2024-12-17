@@ -46,14 +46,19 @@ else
             mStream.Seek(0, SeekOrigin.Begin);
             var result = _inspector.Inspect(mStream);
 
-            Result = JsonSerializer.Serialize(result.Select(x => new { x.Definition, x.Type, x.Points, x.Percentage }), new
+            Result = JsonSerializer.Serialize(result.Select(x => new {
+                x.Definition.File,
+                x.Type,
+                x.Points,
+                x.Percentage
+            }), new
             JsonSerializerOptions
                 {
                     WriteIndented = true,
                     Converters =
-{
-new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-}
+                        {
+                        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                        }
                 });
 
         }
